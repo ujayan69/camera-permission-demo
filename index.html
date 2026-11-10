@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camera Security Demo</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: #101827;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 25px 15px;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+  background: #1e293b;
+  padding: 25px;
+  border-radius: 16px;
+}
+
+button {
+  padding: 13px 18px;
+  margin: 7px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+video {
+  width: 100%;
+  background: black;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+#status {
+  color: #a7f3d0;
+  line-height: 1.5;
+}
+
+.note {
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.5;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>Camera Security Demo</h1>
+
+  <p>
+    Test how browser camera permissions work.
+  </p>
+
+  <p class="note">
+    Camera access starts only after you press Allow Camera
+    and grant browser permission.
+  </p>
+
+  <button id="start">Allow Camera</button>
+
+  <button id="stop">Stop Camera</button>
+
+  <button id="switch">Switch Camera</button>
+
+  <video id="preview" autoplay playsinline muted></video>
+
+  <p id="status">Camera is currently OFF.</p>
+
+</div>
+
+<script>
+
+const video = document.getElementById("preview");
+const status = document.getElementById("status");
+
+let stream = null;
+let facingMode = "user";
+
+async function startCamera() {
+
+  stopCamera();
+
+  if (!navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia) {
+
+    status.textContent =
+      "Camera requires HTTPS or localhost.";
+    return;
+  }
+
+  try {
+
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: facingMode
+      },
+      audio: false
+    });
+
+    video.srcObject = stream;
+
+    status.textContent =
+      "Camera is active with your permission.";
+
+  } catch (error) {
+
+    status.textContent =
+      "Camera unavailable or permission denied.";
+
+    console.error(error);
+  }
+}
+
+function stopCamera() {
+
+  if (stream) {
+
+    stream.getTracks().forEach(track => {
+      track.stop();
+    });
+
+    stream = null;
+  }
+
+  video.srcObject = null;
+}
+
+document.getElementById("start").onclick = startCamera;
+
+document.getElementById("stop").onclick = () => {
+
+  stopCamera();
+
+  status.textContent = "Camera is OFF.";
+};
+
+document.getElementById("switch").onclick = async () => {
+
+  facingMode =
+    facingMode === "user" ? "environment" : "user";
+
+  if (stream) {
+    await startCamera();
+  }
+};
+
+window.addEventListener("pagehide", stopCamera);
+
+</script>
+
+</body>
+</html>
